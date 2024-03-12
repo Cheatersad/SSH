@@ -89,5 +89,5 @@ def main():
     save_data_to_csv(all_data, 'node_data.csv')
 
 # Note: Uncomment the below lines when you are ready to run the program
-# main()
+main()
 
