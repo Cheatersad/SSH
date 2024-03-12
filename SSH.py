@@ -14,8 +14,6 @@ def collect_data_from_node(node):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(node['host'], username=node['name'], password=node['password'])
     commands = {
-        "cpu_load": "get_cpu_load",
-        "memory_load": "get_memory_load",
         "subscriber_count_registered": "cmm subscriber count --emmState registered",
         "subscriber_count_deregistered": "cmm subscriber count --emmState deregistered",
         "subscriber_count_connected": "cmm subscriber count --ecmState connected",
@@ -50,7 +48,7 @@ def collect_data_from_all_nodes(nodes):
 
 # Define a function to save data to a CSV file
 def save_data_to_csv(data, filename):
-    fields = ['region', 'node_name', 'date', 'day_of_the_week', 'time', 'cpu_load', 'memory_load', 
+    fields = ['region', 'node_name', 'date', 'day_of_the_week', 'time',
               'subscriber_count_registered', 'subscriber_count_deregistered', 'subscriber_count_connected', 
               'subscriber_count_idle', 'subscriber_count_amfRmState_registered', 
               'subscriber_count_amfRmState_deregistered', 'subscriber_count_amfCmState_connected', 
