@@ -1,18 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
+# Import necessary libraries
+import paramiko
+import csv
+from datetime import datetime
 
-# In[1]:
+# Define the nodes and credentials
+nodes = [
+    {"region": "Espoo", "name": "Nalla", "host": "nalla_host", "username": "user", "password": "pass"},
+]
 
-
-# Updated function to collect data from a node with new commands
-def collect_data_from_node_updated(node):
-    # Connect to the node via SSH
+# Define a function to collect data from a node
+def collect_data_from_node(node):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(node['host'], username=node['username'], password=node['password'])
-    
-    # Commands mapping to their respective data points
+    client.connect(node['host'], username=node['name'], password=node['password'])
     commands = {
+        "cpu_load": "get_cpu_load",
+        "memory_load": "get_memory_load",
         "subscriber_count_registered": "cmm subscriber count --emmState registered",
         "subscriber_count_deregistered": "cmm subscriber count --emmState deregistered",
         "subscriber_count_connected": "cmm subscriber count --ecmState connected",
@@ -24,8 +27,6 @@ def collect_data_from_node_updated(node):
         "amfIntfSummary_N2": "cmm amfIntfSummary list --amfIntfType N2",
         "intfSummary_s1mme": "cmm intfSummary list --linkInterfaceType s1mme"
     }
-
-    # Collect data using the commands
     collected_data = {
         "region": node['region'],
         "node_name": node['name'],
@@ -36,39 +37,31 @@ def collect_data_from_node_updated(node):
     for key, command in commands.items():
         stdin, stdout, stderr = client.exec_command(command)
         collected_data[key] = stdout.read().decode().strip()
-
-    # Close the SSH connection
     client.close()
-
     return collected_data
 
-# Update the fields for the CSV file to include new metrics
-def save_data_to_csv_updated(data, filename):
-    fields = [
-        'region', 'node_name', 'date', 'day_of_the_week', 'time', 'cpu_load', 'memory_load',
-        'subscriber_count_registered', 'subscriber_count_deregistered',
-        'subscriber_count_connected', 'subscriber_count_idle',
-        'subscriber_count_amfRmState_registered', 'subscriber_count_amfRmState_deregistered',
-        'subscriber_count_amfCmState_connected', 'subscriber_count_amfCmState_idle',
-        'amfIntfSummary_N2', 'intfSummary_s1mme'
-    ]
+# Define a function to collect data from all nodes
+def collect_data_from_all_nodes(nodes):
+    all_data = []
+    for node in nodes:
+        node_data = collect_data_from_node(node)
+        all_data.append(node_data)
+    return all_data
+
+# Define a function to save data to a CSV file
+def save_data_to_csv(data, filename):
+    fields = ['region', 'node_name', 'date', 'day_of_the_week', 'time', 'cpu_load', 'memory_load', 
+              'subscriber_count_registered', 'subscriber_count_deregistered', 'subscriber_count_connected', 
+              'subscriber_count_idle', 'subscriber_count_amfRmState_registered', 
+              'subscriber_count_amfRmState_deregistered', 'subscriber_count_amfCmState_connected', 
+              'subscriber_count_amfCmState_idle', 'amfIntfSummary_N2', 'intfSummary_s1mme']
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fields)
         writer.writeheader()
         for row in data:
             writer.writerow(row)
 
-# Update main function to use the updated functions
-def main_updated():
-    all_data = collect_data_from_all_nodes(nodes)  # Reuse the function as it calls collect_data_from_node internally
-    save_data_to_csv_updated(all_data, 'node_data_updated.csv')
-
-
-main_updated()
-
-
-# In[ ]:
-
-
-
-
+# Main function to coordinate data collection and storage
+def main():
+    all_data = collect_data_from_all_nodes(nodes)
+    save_data_to_csv(all_data, 'node_data.csv')
