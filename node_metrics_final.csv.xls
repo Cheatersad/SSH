@@ -1,0 +1,3 @@
+Region,Node Name,emmState_registered,emmState_deregistered,ecmState_connected,ecmState_idle,amfRmState_registered,amfRmState_deregistered,amfCmState_connected,amfCmState_idle,N2_Enabled,N2_Disabled,N2_Total
+Espoo,TCmm-Nike-SRN-Espoo,337,188,214,312,0,0,0,0,549,4,553
+Espoo,TAMF-Jill-SRN-Espoo,0,0,0,0,75,139,35,179,219,11,230
