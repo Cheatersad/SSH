@@ -4,8 +4,8 @@ import re
 import paramiko
 import socket
 import threading
-from collections import defaultdict
 from datetime import datetime
+
 nodes = []
 with open("AMF_CMM.csv", "r") as file:
     reader = csv.reader(file)
@@ -71,7 +71,7 @@ expanded_command_to_field_map = {
 }
 
 fieldnames = [
-    "Timestamp","Node Name", "Date", "Time", "Day of the week",
+    "Timestamp", "Node Name", "Date", "Time", "Day of the week",
     "emmState_registered_subscriber_count", "emmState_deregistered_subscriber_count",
     "ecmState_connected_subscriber_count", "ecmState_idle_subscriber_count",
     "amfRmState_registered_subscriber_count", "amfRmState_deregistered_subscriber_count",
@@ -125,28 +125,22 @@ def process_output(command, output, ssh, node):
         total_count = enabled_count + disabled_count
         return [enabled_count, disabled_count, total_count]
     elif command.startswith("ls -l /data-pcmd/ | grep -i"):
-        files = re.findall(r'\S+\.zst', output)
+        files = re.findall(r'\S+\.(?:zst|gz)', output)
         total_count = 0
         for file in files:
-            zstdcat_command = f"zstdcat /data-pcmd/{file} | wc -l"
-            count_output = execute_ssh_command(node["host"], node["username"], node["password"], zstdcat_command)
+            if file.endswith(".zst"):
+                count_command = f"zstdcat /data-pcmd/{file} | wc -l"
+            elif file.endswith(".gz"):
+                count_command = f"gzip -dc /data-pcmd/{file} | wc -l"
+            count_output = execute_ssh_command(node["host"], node["username"], node["password"], count_command)
             total_count += int(count_output.strip())
         return total_count
-
-
 
 def process_node(node, writer, lock):
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(node["host"], username=node["username"], password=node["password"], timeout=30)
-    except (paramiko.SSHException, socket.error) as e:
-        error_message = f"Connection failed for {node['host']}: {str(e)}"
-        print(error_message)
-        with lock:
-            with open("error.log", "a") as error_log:
-                error_log.write(error_message + "\n")
-        return
     except (paramiko.SSHException, socket.error) as e:
         error_message = f"Connection failed for {node['host']}: {str(e)}"
         print(error_message)
@@ -197,7 +191,7 @@ def process_node(node, writer, lock):
 
     ssh.close()
 
-output_file = "output_testing.csv"
+output_file = "output_testing_testing.csv"
 lock = threading.Lock()
 
 with open(output_file, mode="w", newline="") as file:
