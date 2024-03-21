@@ -191,7 +191,7 @@ def process_node(node, writer, lock):
 
     ssh.close()
 
-output_file = "output_testing_testing.csv"
+output_file = "Node_metrics_data.csv"
 lock = threading.Lock()
 
 with open(output_file, mode="w", newline="") as file:
